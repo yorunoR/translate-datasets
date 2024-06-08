@@ -6,8 +6,12 @@ input_file = 'output/Berkeley-Function-Calling-Leaderboard-JP/gorilla_openfuncti
 output_file = 'output/Berkeley-Function-Calling-Leaderboard-JP/gorilla_openfunctions_v1_test_simple_with_return.json'
 
 template = """「{question}」という指示に対して、{name}という関数を使います。
-{name}は、{description}
-{name}の返り値を予測しなさい。返り値は[[と]]で囲ってください。
+{name}の返り値を予測しなさい。
+
+* {name}は、{description}
+* 正確な情報がない場合でも、もっともらしい形式で、架空の値を出力しなさい。
+* 返り値は[[と]]で囲ってください。
+
 回答は、以下の形式でしてください。
 説明:（説明）
 返り値: [[返り値]]"""
