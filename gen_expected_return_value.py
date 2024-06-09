@@ -9,15 +9,15 @@ template = """「{question}」という指示に対して、{name}という関�
 {name}の返り値を予測しなさい。
 
 * {name}は、{description}
-* 正確な情報がない場合でも、もっともらしい形式で、架空の値を出力しなさい。
-* 返り値は[[と]]で囲ってください。
+* 正確な情報がない場合でも、関数の呼び出し側が使用できる形式で、架空の値を出力しなさい。
+* 返り値は||と||で囲ってください。
 
 回答は、以下の形式でしてください。
-説明:（説明）
-返り値: [[返り値]]"""
+説明: '説明'
+返り値: ||返り値||"""
 
 def extract_bracketed_values(text):
-    pattern = r'\[\[(.*?)\]\]'
+    pattern = r'\|\|(.*?)\|\|'
     matches = re.findall(pattern, text, re.DOTALL)
     return matches[0]
 
@@ -32,6 +32,7 @@ def gen_expected_return_value(json):
         api_key="EMPTY",
         api_base="http://localhost:4000/v1",
         messages=[
+            {"role": "system", "content": 'あなたはユーザーからの質問に誠実に答えます。'},
             {"role": "user", "content": content},
         ],
         max_tokens=1800,
@@ -50,7 +51,7 @@ def gen_expected_return_value(json):
     except Exception as e:
         print(e)
         print(response)
-        result = "FAILED: 期待値作成に失敗しました！"
+        return None
 
     return result
 
@@ -61,10 +62,16 @@ def add_key_value_to_jsonl(input_file, output_file):
     updated_lines = []
     for i, line in enumerate(lines, 1):
         json_obj = json.loads(line)
+
         expected_return_value = gen_expected_return_value(json_obj)
+        if expected_return_value is None:
+            expected_return_value = gen_expected_return_value(json_obj)
+            if expected_return_value is None:
+                expected_return_value = "FAILED: 期待値作成に失敗しました！"
+
         json_obj["expected_return_value"] = expected_return_value
         updated_lines.append(json.dumps(json_obj, ensure_ascii=False))
-        print(i)
+        print(i, expected_return_value)
 
     with open(output_file, 'w', encoding='utf-8') as file:
         for line in updated_lines:
